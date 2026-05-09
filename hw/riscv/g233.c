@@ -1719,7 +1719,9 @@ static void virt_machine_init(MachineState *machine)
     sifive_test_create(s->memmap[VIRT_TEST].base);
 
     /* G233 GPIO controller */
-    sysbus_create_simple(TYPE_G233_GPIO, s->memmap[VIRT_GPIO].base, NULL);
+    // sysbus_create_simple(TYPE_G233_GPIO, s->memmap[VIRT_GPIO].base, NULL);
+    sysbus_create_simple(TYPE_G233_GPIO, s->memmap[VIRT_GPIO].base,
+    qdev_get_gpio_in(mmio_irqchip, 2));   // IRQ 2 = GPIO
 
     /* VirtIO MMIO devices */
     for (i = 0; i < VIRTIO_COUNT; i++) {

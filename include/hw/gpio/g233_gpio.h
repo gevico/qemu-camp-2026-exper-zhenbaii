@@ -35,6 +35,8 @@ struct G233GPIOState
     SysBusDevice parent_obj;            /* 系统总线设备，其实就是通过访问内存来互动的设备 */
     MemoryRegion mmio;                  /* MMIO region */
     uint32_t regs[G233_GPIO_NREGS];     /* register table */
+
+    qemu_irq irq;                       /* interrupt line connected with PLIC */
 };
 
 
