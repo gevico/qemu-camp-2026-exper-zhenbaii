@@ -45,6 +45,7 @@
 #include "hw/intc/sifive_plic.h"
 #include "hw/misc/sifive_test.h"
 #include "hw/gpio/g233_gpio.h"
+#include "hw/timer/g233_pwm.h"
 #include "hw/core/platform-bus.h"
 #include "chardev/char.h"
 #include "system/device_tree.h"
@@ -96,7 +97,8 @@ static const MemMapEntry virt_memmap[] = {
     [VIRT_APLIC_S] =      {  0xd000000, APLIC_SIZE(VIRT_CPUS_MAX) },
     [VIRT_UART0] =        { 0x10000000,         0x100 },
     [VIRT_VIRTIO] =       { 0x10001000,        0x1000 },
-    [VIRT_GPIO] =         { 0x10012000,        0x100 },
+    [VIRT_GPIO] =         { 0x10012000,        0x100 },      /* gpio */
+    [VIRT_PWM] =          { 0x10015000,        0x1000 },     /* pwm */
     [VIRT_FW_CFG] =       { 0x10100000,          0x18 },
     [VIRT_FLASH] =        { 0x20000000,     0x4000000 },
     [VIRT_IMSIC_M] =      { 0x24000000, VIRT_IMSIC_MAX_SIZE },
@@ -1722,6 +1724,10 @@ static void virt_machine_init(MachineState *machine)
     // sysbus_create_simple(TYPE_G233_GPIO, s->memmap[VIRT_GPIO].base, NULL);
     sysbus_create_simple(TYPE_G233_GPIO, s->memmap[VIRT_GPIO].base,
     qdev_get_gpio_in(mmio_irqchip, 2));   // IRQ 2 = GPIO
+
+    /* G233 PWM controller */
+    sysbus_create_simple(TYPE_G233_PWM, s->memmap[VIRT_PWM].base,
+    qdev_get_gpio_in(mmio_irqchip, 3));   // IRQ 3 = PWM
 
     /* VirtIO MMIO devices */
     for (i = 0; i < VIRTIO_COUNT; i++) {

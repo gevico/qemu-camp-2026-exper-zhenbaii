@@ -91,6 +91,7 @@ enum {
     VIRT_PCIE_ECAM,
     VIRT_IOMMU_SYS,
     VIRT_GPIO,      /* GPIO controller */
+    VIRT_PWM,       /* PWM controller */
 };
 
 enum {
