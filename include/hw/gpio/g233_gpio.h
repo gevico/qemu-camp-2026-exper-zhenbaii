@@ -39,7 +39,4 @@ struct G233GPIOState
     qemu_irq irq;                       /* interrupt line connected with PLIC */
 };
 
-
-
-
 #endif
