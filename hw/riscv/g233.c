@@ -47,6 +47,8 @@
 #include "hw/gpio/g233_gpio.h"
 #include "hw/timer/g233_pwm.h"
 #include "hw/watchdog/g233_wdt.h"
+#include "hw/ssi/g233_spi.h"
+#include "hw/ssi/ssi.h"
 #include "hw/core/platform-bus.h"
 #include "chardev/char.h"
 #include "system/device_tree.h"
@@ -101,6 +103,7 @@ static const MemMapEntry virt_memmap[] = {
     [VIRT_WDT] =          { 0x10010000,        0x1000 },
     [VIRT_GPIO] =         { 0x10012000,        0x100 },      /* gpio */
     [VIRT_PWM] =          { 0x10015000,        0x1000 },     /* pwm */
+    [VIRT_SPI] =          { 0x10018000,        0x1000 },     /* spi */
     [VIRT_FW_CFG] =       { 0x10100000,          0x18 },
     [VIRT_FLASH] =        { 0x20000000,     0x4000000 },
     [VIRT_IMSIC_M] =      { 0x24000000, VIRT_IMSIC_MAX_SIZE },
@@ -1734,6 +1737,33 @@ static void virt_machine_init(MachineState *machine)
     /* G233 WDT controller */
     sysbus_create_simple(TYPE_G233_WDT, s->memmap[VIRT_WDT].base,
     qdev_get_gpio_in(mmio_irqchip, 4));   // IRQ 4 = WDT
+
+    /* G233 SPI controller + Flash devices */
+    {
+        DeviceState *spi_dev = qdev_new(TYPE_G233_SPI);
+        SSIBus *spi_bus;
+        DeviceState *flash0, *flash1;
+
+        sysbus_realize_and_unref(SYS_BUS_DEVICE(spi_dev), &error_fatal);
+        sysbus_mmio_map(SYS_BUS_DEVICE(spi_dev), 0,
+                        s->memmap[VIRT_SPI].base);
+        sysbus_connect_irq(SYS_BUS_DEVICE(spi_dev), 0,
+                           qdev_get_gpio_in(mmio_irqchip, 5));
+
+        spi_bus = (SSIBus *)qdev_get_child_bus(spi_dev, "spi");
+
+        flash0 = qdev_new("w25x16");
+        qdev_prop_set_uint8(flash0, "cs", 0);
+        ssi_realize_and_unref(flash0, spi_bus, &error_fatal);
+        sysbus_connect_irq(SYS_BUS_DEVICE(spi_dev), 1,
+                           qdev_get_gpio_in_named(flash0, SSI_GPIO_CS, 0));
+
+        flash1 = qdev_new("w25x32");
+        qdev_prop_set_uint8(flash1, "cs", 1);
+        ssi_realize_and_unref(flash1, spi_bus, &error_fatal);
+        sysbus_connect_irq(SYS_BUS_DEVICE(spi_dev), 2,
+                           qdev_get_gpio_in_named(flash1, SSI_GPIO_CS, 0));
+    }
 
     /* VirtIO MMIO devices */
     for (i = 0; i < VIRTIO_COUNT; i++) {

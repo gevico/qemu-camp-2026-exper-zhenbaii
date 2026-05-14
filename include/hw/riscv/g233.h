@@ -93,6 +93,7 @@ enum {
     VIRT_GPIO,      /* GPIO controller */
     VIRT_PWM,       /* PWM controller */
     VIRT_WDT,       /* Watchdog */
+    VIRT_SPI,       /* SPI controller */
 };
 
 enum {
